@@ -1,0 +1,6 @@
+langchain==0.2.16
+langchain-community==0.2.16
+langchain-groq==0.1.10
+langchain-experimental==0.0.64
+langgraph==0.2.28
+python-dotenv==1.0.1
