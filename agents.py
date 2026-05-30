@@ -14,7 +14,7 @@ from state import GraphState
 import io     
 import contextlib  
 load_dotenv()
-llm = ChatGroq(model="llama3-70b-8192", temperature=0.7)
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
 
 # Wrap PythonREPLTool with @tool so Groq receives a clean single-argument schema.
 # The base PythonREPLTool has a multi-field schema that confuses the Groq tool-calling format.
@@ -123,5 +123,5 @@ def tester_node(state: GraphState) -> dict:
     critique = AIMessage(content=content, name="Tester")
     return {
         "conversation_history": [critique],
-        "reflection_count": state["reflection_count"] + 1
+        "reflection_count":  1
     }
