@@ -53,18 +53,25 @@ tester_agent = _create_tester_chain(llm, TESTER_SYSTEM_PROMPT)
 
 
 def developer_node(state: GraphState) -> dict:
-    """LangGraph node: invokes the Developer Agent to write or revise code."""
     print("\n" + "="*60)
     print("DEVELOPER AGENT -- generating / revising code...")
     print("="*60)
 
     response = developer_agent.invoke({"messages": state["conversation_history"]})
-    last_message = response["messages"][-1]
-    print("\033[92m")         # green
-    print(last_message.content)
-    print("\033[0m")          # reset
+    messages = response["messages"]
 
-    new_message = AIMessage(content=last_message.content, name="Developer")
+    # Walk back through messages to find first non-empty content
+    content = ""
+    for msg in reversed(messages):
+        if hasattr(msg, "content") and msg.content and msg.content.strip():
+            content = msg.content
+            break
+
+    print("\033[92m")
+    print(content)
+    print("\033[0m")
+
+    new_message = AIMessage(content=content, name="Developer")
     return {"conversation_history": [new_message]}
 
 
