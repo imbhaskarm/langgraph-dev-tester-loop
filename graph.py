@@ -5,9 +5,11 @@ from agents import developer_node, tester_node
 
 
 def should_continue(state: GraphState) -> str:
+    critique = state["conversation_history"][-1].content
+    if "10/10" in critique or "Score: 10" in critique:
+        return END
     if state["reflection_count"] >= state["max_reflections"]:
-        print(f"\033[91mReflection cap reached ({state['reflection_count']}/{state['max_reflections']}). Stopping.\033[0m")
-        return END                    
+        return END
     return "developer_node"
 
 

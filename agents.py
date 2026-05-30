@@ -14,11 +14,7 @@ from state import GraphState
 import io     
 import contextlib  
 load_dotenv()
-
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    temperature=0.7,
-)
+llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.7)
 
 # Wrap PythonREPLTool with @tool so Groq receives a clean single-argument schema.
 # The base PythonREPLTool has a multi-field schema that confuses the Groq tool-calling format.
