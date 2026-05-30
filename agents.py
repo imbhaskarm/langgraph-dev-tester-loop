@@ -5,7 +5,8 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.messages import ToolMessage
- 
+import re
+
 from langgraph.prebuilt import create_react_agent
 from prompts import DEVELOPER_SYSTEM_PROMPT, TESTER_SYSTEM_PROMPT
 from state import GraphState
@@ -96,8 +97,13 @@ def developer_node(state: GraphState) -> dict:
     print(content)
     print("\033[0m")
 
+        # Strip raw JSON tool call text that llama sometimes appends
+     
+    content = re.sub(r'\{[\s\S]*?"code"[\s\S]*?\}', '', content).strip()
+
     new_message = AIMessage(content=content, name="Developer")
     return {"conversation_history": [new_message]}
+     
 
 
 def tester_node(state: GraphState) -> dict:
