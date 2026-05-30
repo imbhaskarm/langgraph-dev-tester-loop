@@ -4,7 +4,7 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain.agents import AgentExecutor, create_openai_tools_agent
+ 
 from langchain_experimental.tools import PythonREPLTool
 from langgraph.prebuilt import create_react_agent
 from prompts import DEVELOPER_SYSTEM_PROMPT, TESTER_SYSTEM_PROMPT
@@ -29,15 +29,7 @@ def python_repl_tool(code: str) -> str:
     return _base_repl.run(code)
 
 
-def _create_agent(llm, tools, system_prompt) -> AgentExecutor:
-    """Build a LangChain tool-calling agent wrapped in an AgentExecutor."""
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        MessagesPlaceholder(variable_name="messages"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-    agent = create_openai_tools_agent(llm, tools, prompt)
-    return AgentExecutor(agent=agent, tools=tools, handle_parsing_errors=True)
+
 
 
 def _create_tester_chain(llm, system_prompt):
@@ -61,12 +53,12 @@ def developer_node(state: GraphState) -> dict:
     print("="*60)
 
     response = developer_agent.invoke({"messages": state["conversation_history"]})
-
+    last_message = response["messages"][-1]
     print("\033[92m")         # green
-    print(response["output"])
+    print(last_message.content)
     print("\033[0m")          # reset
 
-    new_message = AIMessage(content=response["output"], name="Developer")
+    new_message = AIMessage(content=last_message.content, name="Developer")
     return {"conversation_history": [new_message]}
 
 
