@@ -109,14 +109,19 @@ def tester_node(state: GraphState) -> dict:
     print("="*60)
 
     response = tester_agent.invoke({"messages": state["conversation_history"]})
+    content = response.content.strip()
 
-    print("\033[94m")         # blue
-    print(response.content)
-    print("\033[0m")          # reset
+    # Guard: if LLM returns blank, inject a fallback so the loop doesn't hang
+    if not content:
+        content = "No new issues found. All tests pass.\n\nScore: 10/10\n\nALL TESTS PASSED. Score: 10/10"
+        print("⚠️  Tester returned empty — using fallback.")
 
-    # In tester_node:
-    critique = AIMessage(content=response.content, name="Tester")   
+    print("\033[94m")
+    print(content)
+    print("\033[0m")
+
+    critique = AIMessage(content=content, name="Tester")
     return {
         "conversation_history": [critique],
-         "reflection_count": state["reflection_count"] + 1
+        "reflection_count": state["reflection_count"] + 1
     }

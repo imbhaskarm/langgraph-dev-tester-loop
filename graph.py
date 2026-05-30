@@ -1,15 +1,24 @@
 from langgraph.graph import StateGraph, END
-
+import re
 from state import GraphState
 from agents import developer_node, tester_node
 
 
 def should_continue(state: GraphState) -> str:
     critique = state["conversation_history"][-1].content
-    if "10/10" in critique or "Score: 10" in critique:
+
+    # Robust score extraction — handles "Score: 10/10", "Score: 10 / 10", "10/10" etc.
+    match = re.search(r"Score[:\s]+(\d+(?:\.\d+)?)\s*/\s*10", critique, re.IGNORECASE)
+    score = float(match.group(1)) if match else 0.0
+
+    if score >= 10:
+        print("\n Score 10/10 achieved. Stopping loop.")
         return END
+
     if state["reflection_count"] >= state["max_reflections"]:
+        print(f"\nReflection cap reached ({state['reflection_count']}/{state['max_reflections']}). Stopping.")
         return END
+
     return "developer_node"
 
 
@@ -22,4 +31,4 @@ def build_graph():
     builder.add_conditional_edges("tester_node", should_continue)   
     return builder.compile()
 
-    return builder.compile()
+     
