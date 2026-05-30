@@ -4,7 +4,7 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage
- 
+from langchain_core.messages import ToolMessage
  
 from langgraph.prebuilt import create_react_agent
 from prompts import DEVELOPER_SYSTEM_PROMPT, TESTER_SYSTEM_PROMPT
@@ -61,17 +61,32 @@ def developer_node(state: GraphState) -> dict:
     response = developer_agent.invoke({"messages": state["conversation_history"]})
     messages = response["messages"]
 
+    
+
+    TESTER_PATTERNS = (
+        "### Unit Test Report",
+        "Unit Test Report",
+        "Score:",
+        "Test Case",
+        "Here's a detailed",
+        "Here is a detailed",
+        "We will write test",
+    )
+
     content = ""
 
-    # First priority: last AIMessage with text content and no tool calls
+    # First priority: last AIMessage with text, no tool calls, not a tester report
     for msg in reversed(messages):
-        if isinstance(msg, AIMessage) and not msg.tool_calls and msg.content and msg.content.strip():
+        if (isinstance(msg, AIMessage)
+                and not msg.tool_calls
+                and msg.content
+                and msg.content.strip()
+                and not any(msg.content.strip().startswith(p) for p in TESTER_PATTERNS)):
             content = msg.content
             break
 
     # Second priority: last ToolMessage (actual code execution output)
     if not content:
-        from langchain_core.messages import ToolMessage
         for msg in reversed(messages):
             if isinstance(msg, ToolMessage) and msg.content and msg.content.strip():
                 content = msg.content
