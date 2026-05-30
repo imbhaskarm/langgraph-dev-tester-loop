@@ -5,30 +5,19 @@ from agents import developer_node, tester_node
 
 
 def should_continue(state: GraphState) -> str:
-    """Conditional edge: keep looping or stop based on reflection count."""
     if state["reflection_count"] >= state["max_reflections"]:
-        print("\033[91m")
-        print(f"Reflection cap reached ({state['reflection_count']}/{state['max_reflections']}). Stopping.")
-        print("\033[0m")
-        return "__end__"
+        print(f"\033[91mReflection cap reached ({state['reflection_count']}/{state['max_reflections']}). Stopping.\033[0m")
+        return END                    
     return "developer_node"
 
 
 def build_graph():
     builder = StateGraph(GraphState)
-
     builder.add_node("developer_node", developer_node)
     builder.add_node("tester_node", tester_node)
-
     builder.set_entry_point("developer_node")
     builder.add_edge("developer_node", "tester_node")
-    builder.add_conditional_edges(
-    "tester_node",
-    should_continue,
-    {
-        "developer_node": "developer_node",  # loop
-        "__end__": END,                            # stop
-    },
-)
+    builder.add_conditional_edges("tester_node", should_continue)   
+    return builder.compile()
 
     return builder.compile()

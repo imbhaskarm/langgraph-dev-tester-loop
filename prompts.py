@@ -12,6 +12,12 @@ TOOL CALLING RULES -- CRITICAL:
 - When calling python_repl_tool, output ONLY raw JSON.
 - DO NOT wrap the tool call in <function> or <tool_call> XML tags.
 - The 'code' parameter must be a plain Python string -- no markdown fences.
+
+ 
+AFTER RUNNING THE TOOL:
+- You MUST always write a final text response after the tool executes.
+- Include the complete final code in your response.
+- Never end your turn immediately after a tool call.
 """
 
 TESTER_SYSTEM_PROMPT = """You are an intelligent Python QA engineer, expert at writing exhaustive unit tests.

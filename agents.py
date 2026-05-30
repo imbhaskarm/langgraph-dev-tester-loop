@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage
  
-from langchain_experimental.tools import PythonREPLTool
+ 
 from langgraph.prebuilt import create_react_agent
 from prompts import DEVELOPER_SYSTEM_PROMPT, TESTER_SYSTEM_PROMPT
 from state import GraphState
@@ -21,7 +21,7 @@ llm = ChatGroq(
 
 # Wrap PythonREPLTool with @tool so Groq receives a clean single-argument schema.
 # The base PythonREPLTool has a multi-field schema that confuses the Groq tool-calling format.
-_base_repl = PythonREPLTool()
+ 
 
 @tool
 def python_repl_tool(code: str) -> str:

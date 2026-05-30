@@ -27,7 +27,7 @@ if __name__ == "__main__":
         task=(
             "Write a Python program to implement the FLAMES game. "
             "FLAMES stands for Friends, Love, Affection, Marriage, Enemies, Siblings. "
-            "The program should take two names as input and calculate the relationship."
+            "The program should define a flames_game(name1, name2) function and test it with hardcoded example names."
         ),
         max_reflections=3,
     )
