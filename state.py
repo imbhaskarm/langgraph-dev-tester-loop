@@ -13,5 +13,5 @@ class GraphState(TypedDict):
         conversation_history -- full message log across all agent turns
     """
     max_reflections: int
-    reflection_count: Annotated[int, operator.add]
+    reflection_count: int
     conversation_history: Annotated[list[BaseMessage], operator.add]

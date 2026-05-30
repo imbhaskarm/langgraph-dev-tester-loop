@@ -48,7 +48,7 @@ def _create_tester_chain(llm, system_prompt):
 
 
 # Instantiate both agents at module level so graph.py can import them directly.
-developer_agent = create_react_agent(llm, tools=[python_repl_tool])
+developer_agent = create_react_agent(llm, tools=[python_repl_tool],state_modifier=DEVELOPER_SYSTEM_PROMPT)
 tester_agent = _create_tester_chain(llm, TESTER_SYSTEM_PROMPT)
 
 
@@ -84,5 +84,5 @@ def tester_node(state: GraphState) -> dict:
     critique = AIMessage(content=response.content, name="Tester")   
     return {
         "conversation_history": [critique],
-        "reflection_count": 1,
+         "reflection_count": state["reflection_count"] + 1
     }
