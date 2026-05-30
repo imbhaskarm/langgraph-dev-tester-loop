@@ -14,7 +14,8 @@ from state import GraphState
 import io     
 import contextlib  
 load_dotenv()
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
+developer_llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.2)
+tester_llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.0)
 
 # Wrap PythonREPLTool with @tool so Groq receives a clean single-argument schema.
 # The base PythonREPLTool has a multi-field schema that confuses the Groq tool-calling format.
@@ -45,12 +46,21 @@ def _create_tester_chain(llm, system_prompt):
 
 
 # Instantiate both agents at module level so graph.py can import them directly.
-developer_agent = create_react_agent(llm, tools=[python_repl_tool],state_modifier=DEVELOPER_SYSTEM_PROMPT)
-tester_agent = _create_tester_chain(llm, TESTER_SYSTEM_PROMPT)
+developer_agent = create_react_agent(
+    developer_llm,
+    tools=[python_repl_tool],
+    state_modifier=DEVELOPER_SYSTEM_PROMPT,
+)
+tester_agent = _create_tester_chain(tester_llm, TESTER_SYSTEM_PROMPT)
 
+
+def _extract_python_code(text: str) -> str:
+    match = re.search(r"```python\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    return text.strip()
 
 def developer_node(state: GraphState) -> dict:
-    """LangGraph node: invokes the Developer Agent to write or revise code."""
     print("\n" + "="*60)
     print("DEVELOPER AGENT -- generating / revising code...")
     print("="*60)
@@ -58,44 +68,21 @@ def developer_node(state: GraphState) -> dict:
     response = developer_agent.invoke({"messages": state["conversation_history"]})
     messages = response["messages"]
 
-    
-
-    TESTER_PATTERNS = (
-        "### Unit Test Report",
-        "Unit Test Report",
-        "Score:",
-        "Test Case",
-        "Here's a detailed",
-        "Here is a detailed",
-        "We will write test",
-    )
-
     content = ""
-
-    # First priority: last AIMessage with text, no tool calls, not a tester report
     for msg in reversed(messages):
-        if (isinstance(msg, AIMessage)
-                and not msg.tool_calls
-                and msg.content
-                and msg.content.strip()
-                and not any(msg.content.strip().startswith(p) for p in TESTER_PATTERNS)):
-            content = msg.content
+        if isinstance(msg, AIMessage) and not msg.tool_calls and msg.content and msg.content.strip():
+            content = _extract_python_code(msg.content)
             break
 
-    # Second priority: last ToolMessage (actual code execution output)
     if not content:
-        for msg in reversed(messages):
-            if isinstance(msg, ToolMessage) and msg.content and msg.content.strip():
-                content = msg.content
-                break
-    content = re.sub(r'\{[\s\S]*?"code"[\s\S]*?\}', '', content).strip()
+        content = (
+            "Developer failed to provide a final code response.\n"
+            "Return the complete Python solution in a ```python fenced block."
+        )
+
     print("\033[92m")
     print(content)
     print("\033[0m")
-
-        # Strip raw JSON tool call text that llama sometimes appends
-     
-    
 
     new_message = AIMessage(content=content, name="Developer")
     return {"conversation_history": [new_message]}
@@ -103,18 +90,34 @@ def developer_node(state: GraphState) -> dict:
 
 
 def tester_node(state: GraphState) -> dict:
-    """LangGraph node: invokes the Tester Agent to score and critique the latest code."""
     print("\n" + "="*60)
     print(f"TESTER AGENT -- critique iteration #{state['reflection_count'] + 1}")
     print("="*60)
 
     response = tester_agent.invoke({"messages": state["conversation_history"]})
-    content = response.content.strip()
+    raw = response.content
 
-    # Guard: if LLM returns blank, inject a fallback so the loop doesn't hang
+    if isinstance(raw, str):
+        content = raw.strip()
+    elif isinstance(raw, list):
+        parts = []
+        for item in raw:
+            if isinstance(item, dict) and item.get("type") == "text":
+                parts.append(item.get("text", ""))
+        content = "\n".join(parts).strip()
+    else:
+        content = str(raw).strip()
+
     if not content:
-        content = "No new issues found. All tests pass.\n\nScore: 10/10\n\nALL TESTS PASSED. Score: 10/10"
-        print("⚠️  Tester returned empty — using fallback.")
+        content = (
+            "Unit Test Report\n"
+            "- Tester returned empty output.\n\n"
+            "Score: 0/10\n\n"
+            "Critique & Suggestions\n"
+            "- No valid test review was produced.\n"
+            "- Re-run the tester with the full developer code.\n"
+        )
+        print("⚠️ Tester returned empty — forcing retry path with Score: 0/10.")
 
     print("\033[94m")
     print(content)
@@ -123,5 +126,5 @@ def tester_node(state: GraphState) -> dict:
     critique = AIMessage(content=content, name="Tester")
     return {
         "conversation_history": [critique],
-        "reflection_count":  1
+        "reflection_count": 1
     }
