@@ -13,7 +13,7 @@ def run(task: str, max_reflections: int = 3):
     graph = build_graph()
 
     inputs = {
-        "conversation_history": [HumanMessage(content=task)],
+        "conversation_history": [HumanMessage(content=task,name="User")],
         "reflection_count": 0,
         "max_reflections": max_reflections,
     }
