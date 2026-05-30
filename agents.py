@@ -14,7 +14,7 @@ from state import GraphState
 import io     
 import contextlib  
 load_dotenv()
-llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.7)
+llm = ChatGroq(model="llama3-70b-8192", temperature=0.7)
 
 # Wrap PythonREPLTool with @tool so Groq receives a clean single-argument schema.
 # The base PythonREPLTool has a multi-field schema that confuses the Groq tool-calling format.
@@ -26,7 +26,7 @@ def python_repl_tool(code: str) -> str:
     stdout_capture = io.StringIO()
     try:
         with contextlib.redirect_stdout(stdout_capture):
-            exec(code, {})
+            exec(code, {"__builtins__": __builtins__})   # ← FIX: restore builtins
         return stdout_capture.getvalue() or "Code executed with no output."
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
@@ -88,14 +88,14 @@ def developer_node(state: GraphState) -> dict:
             if isinstance(msg, ToolMessage) and msg.content and msg.content.strip():
                 content = msg.content
                 break
-
+    content = re.sub(r'\{[\s\S]*?"code"[\s\S]*?\}', '', content).strip()
     print("\033[92m")
     print(content)
     print("\033[0m")
 
         # Strip raw JSON tool call text that llama sometimes appends
      
-    content = re.sub(r'\{[\s\S]*?"code"[\s\S]*?\}', '', content).strip()
+    
 
     new_message = AIMessage(content=content, name="Developer")
     return {"conversation_history": [new_message]}

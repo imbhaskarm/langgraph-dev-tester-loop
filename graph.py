@@ -7,7 +7,6 @@ from agents import developer_node, tester_node
 def should_continue(state: GraphState) -> str:
     critique = state["conversation_history"][-1].content
 
-    # Robust score extraction — handles "Score: 10/10", "Score: 10 / 10", "10/10" etc.
     match = re.search(r"Score[:\s]+(\d+(?:\.\d+)?)\s*/\s*10", critique, re.IGNORECASE)
     score = float(match.group(1)) if match else 0.0
 
@@ -15,7 +14,7 @@ def should_continue(state: GraphState) -> str:
         print("\n Score 10/10 achieved. Stopping loop.")
         return END
 
-    if state["reflection_count"] >= state["max_reflections"]:
+    if state["reflection_count"] > state["max_reflections"]:    # ← FIX: > instead of >=
         print(f"\nReflection cap reached ({state['reflection_count']}/{state['max_reflections']}). Stopping.")
         return END
 

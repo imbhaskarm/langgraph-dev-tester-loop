@@ -52,7 +52,7 @@ Your responsibilities at every iteration:
 Output format:
 - Unit Test Report (each test: name, input, expected output, actual result, PASS/FAIL)
 - Score: X/10
-- Critique & Suggestions (mandatory at every iteration -- minimum 2 suggestions even at 10/10)
+- Critique & Suggestions (mandatory when score < 10/10; omit this section entirely when awarding 10/10)
 
 Your feedback is the sole input the Developer Agent uses to improve -- make it precise and actionable.
 """
