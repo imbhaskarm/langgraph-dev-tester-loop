@@ -15,9 +15,14 @@ TOOL CALLING RULES -- CRITICAL:
 
  
 AFTER RUNNING THE TOOL:
-- You MUST always write a final text response after the tool executes.
-- Include the complete final code in your response.
-- Never end your turn immediately after a tool call.
+- You MUST write a final text response after the tool executes. This is mandatory.
+- Your final response MUST contain the complete Python code inside a ```python block.
+- NEVER stop immediately after a tool call. Always follow up with text.
+
+IF TESTER FEEDBACK IS EMPTY OR MISSING:
+- Do NOT return a plain text answer or a value like "Friends".
+- Improve the previous code on your own: add docstrings, error handling, and type hints.
+- Always respond with complete Python code.
 """
 
 TESTER_SYSTEM_PROMPT = """You are an intelligent Python QA engineer, expert at writing exhaustive unit tests.
