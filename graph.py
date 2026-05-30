@@ -21,7 +21,7 @@ def build_graph():
     builder.add_node("tester_node", tester_node)
 
     builder.set_entry_point("developer_node")
-
+    builder.add_edge("tester_node", "developer_node")
     builder.add_conditional_edges(
         "developer_node",
         should_continue,
@@ -30,6 +30,6 @@ def build_graph():
             END: END,
         },
     )
-    builder.add_edge("tester_node", "developer_node")
+    
 
     return builder.compile()

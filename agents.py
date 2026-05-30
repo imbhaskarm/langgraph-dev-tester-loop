@@ -6,7 +6,7 @@ from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_experimental.tools import PythonREPLTool
-
+from langgraph.prebuilt import create_react_agent
 from prompts import DEVELOPER_SYSTEM_PROMPT, TESTER_SYSTEM_PROMPT
 from state import GraphState
 
@@ -50,7 +50,7 @@ def _create_tester_chain(llm, system_prompt):
 
 
 # Instantiate both agents at module level so graph.py can import them directly.
-developer_agent = _create_agent(llm, [python_repl_tool], DEVELOPER_SYSTEM_PROMPT)
+developer_agent = create_react_agent(llm, tools=[python_repl_tool])
 tester_agent = _create_tester_chain(llm, TESTER_SYSTEM_PROMPT)
 
 
@@ -82,7 +82,8 @@ def tester_node(state: GraphState) -> dict:
     print(response.content)
     print("\033[0m")          # reset
 
-    critique = HumanMessage(content=response.content, name="Tester")
+    # In tester_node:
+    critique = AIMessage(content=response.content, name="Tester")   
     return {
         "conversation_history": [critique],
         "reflection_count": 1,
