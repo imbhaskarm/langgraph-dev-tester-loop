@@ -9,7 +9,9 @@ from langchain_experimental.tools import PythonREPLTool
 from langgraph.prebuilt import create_react_agent
 from prompts import DEVELOPER_SYSTEM_PROMPT, TESTER_SYSTEM_PROMPT
 from state import GraphState
-
+ 
+import io     
+import contextlib  
 load_dotenv()
 
 llm = ChatGroq(
@@ -23,10 +25,14 @@ _base_repl = PythonREPLTool()
 
 @tool
 def python_repl_tool(code: str) -> str:
-    """Execute Python code and return the printed output.
-    Pass ONLY the raw Python code string as the 'code' parameter.
-    Do NOT wrap in markdown, JSON, or XML tags."""
-    return _base_repl.run(code)
+    """Execute Python code and return printed output. Never use input() in code."""
+    stdout_capture = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(stdout_capture):
+            exec(code, {})
+        return stdout_capture.getvalue() or "Code executed with no output."
+    except Exception as e:
+        return f"Error: {type(e).__name__}: {e}"
 
 
 

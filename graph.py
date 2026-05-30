@@ -10,8 +10,8 @@ def should_continue(state: GraphState) -> str:
         print("\033[91m")
         print(f"Reflection cap reached ({state['reflection_count']}/{state['max_reflections']}). Stopping.")
         print("\033[0m")
-        return END
-    return "tester_node"
+        return "__end__"
+    return "developer_node"
 
 
 def build_graph():
@@ -27,7 +27,7 @@ def build_graph():
     should_continue,
     {
         "developer_node": "developer_node",  # loop
-        END: END,                            # stop
+        "__end__": END,                            # stop
     },
 )
 
